@@ -1,44 +1,93 @@
-# Racer
-import math
+# racer.py
 import pygame
 import random
 import sys
 
-# Initialize Pygame
 pygame.init()
 
-# Screen setup
 WIDTH, HEIGHT = 400, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Racer Game")
 
-# Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (200, 0, 0)
 YELLOW = (255, 255, 0)
 GREEN = (0, 255, 0)
 
-# Clock
 clock = pygame.time.Clock()
 FPS = 60
 
-# Load fonts
 font = pygame.font.SysFont("Arial", 20)
 
-# Player settings
 player = pygame.Rect(175, 500, 50, 70)
 player_speed = 5
 
-# Enemy settings
 enemy = pygame.Rect(random.randint(0, 350), 0, 50, 70)
 enemy_speed = 3
 
-# Coin settings
-coins = []  # List to hold coins
+coins = []
 coin_timer = 0
-coin_spawn_delay = 30  # frames
-coin_weights = [1, 2, 3]  # Different coin weights
+coin_spawn_delay = 30
+coin_weights = [1, 2, 3]
+
+score = 0
+running = True
+while running:
+    clock.tick(FPS)
+    screen.fill(BLACK)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player.left > 0:
+        player.x -= player_speed
+    if keys[pygame.K_RIGHT] and player.right < WIDTH:
+        player.x += player_speed
+
+    enemy.y += enemy_speed
+    if enemy.top > HEIGHT:
+        enemy.x = random.randint(0, WIDTH - enemy.width)
+        enemy.y = 0
+
+    coin_timer += 1
+    if coin_timer >= coin_spawn_delay:
+        coin_timer = 0
+        coin_x = random.randint(0, WIDTH - 20)
+        coin = pygame.Rect(coin_x, 0, 20, 20)
+        coin.value = random.choice(coin_weights)
+        coins.append(coin)
+
+    for coin in coins[:]:
+        coin.y += 3
+        if coin.colliderect(player):
+            score += coin.value
+            coins.remove(coin)
+        elif coin.top > HEIGHT:
+            coins.remove(coin)
+
+    pygame.draw.rect(screen, GREEN, player)
+    pygame.draw.rect(screen, RED, enemy)
+    for coin in coins:
+        pygame.draw.circle(screen, YELLOW, coin.center, 10)
+
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+    if player.colliderect(enemy):
+        game_over_text = font.render("Game Over!", True, WHITE)
+        screen.blit(game_over_text, (WIDTH // 2 - 50, HEIGHT // 2))
+        pygame.display.flip()
+        pygame.time.wait(2000)
+        running = False
+
+    pygame.display.flip()
+
+pygame.quit()
+sys.exit()
+
 
 # Game state
 
