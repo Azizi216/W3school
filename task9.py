@@ -119,41 +119,38 @@ sys.exit()
 # snake
 
 
-# Initialize Pygame
+import pygame
+import random
+import sys
+
 pygame.init()
 
-# Screen settings
 WIDTH, HEIGHT = 600, 600
 CELL_SIZE = 20
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Snake Game")
 
-# Colors
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 
-# Clock
 clock = pygame.time.Clock()
 FPS = 10
 
-# Snake settings
+# Snake initial settings
 snake = [(100, 100)]
-snake_dir = (CELL_SIZE, 0)  # Moving right initially
+snake_dir = (CELL_SIZE, 0)  # moving right initially
 
-# Food list – holds multiple food with weight and timer
-foods = []
-food_weights = [1, 2, 3]  # Different weights
-food_lifetime = 50  # frames
+# Food settings
+foods = []  # list of foods on the board
+food_weights = [1, 2, 3]  # different weights
+food_lifetime = 50  # lifetime in frames
 
 # Score
 score = 0
 font = pygame.font.SysFont("Arial", 20)
-
-# Add a new food to the board
-
 
 def spawn_food():
     x = random.randint(0, (WIDTH - CELL_SIZE) // CELL_SIZE) * CELL_SIZE
@@ -161,21 +158,20 @@ def spawn_food():
     weight = random.choice(food_weights)
     foods.append({"pos": (x, y), "weight": weight, "timer": food_lifetime})
 
+# Spawn first food
+spawn_food()
 
-# Game loop
 running = True
-spawn_food()  # Spawn the first food
-
 while running:
+    clock.tick(FPS)
     screen.fill(BLACK)
 
-    # Events
+    # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
-    # Movement keys
+    # Controls
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP] and snake_dir != (0, CELL_SIZE):
         snake_dir = (0, -CELL_SIZE)
@@ -186,7 +182,7 @@ while running:
     if keys[pygame.K_RIGHT] and snake_dir != (-CELL_SIZE, 0):
         snake_dir = (CELL_SIZE, 0)
 
-    # Move the snake
+    # Move snake
     head_x, head_y = snake[0]
     new_head = (head_x + snake_dir[0], head_y + snake_dir[1])
     snake.insert(0, new_head)
@@ -197,13 +193,13 @@ while running:
         pygame.quit()
         sys.exit()
 
-    # Check self-collision
+    # Check self collision
     if new_head in snake[1:]:
         print("Game Over")
         pygame.quit()
         sys.exit()
 
-    # Check food collision
+    # Check if snake eats food
     eaten = False
     for food in foods[:]:
         if new_head == food["pos"]:
@@ -214,12 +210,18 @@ while running:
             break
 
     if not eaten:
-        snake.pop()  # Only grow if food was eaten
+        snake.pop()  # only grow if food eaten
 
     # Update and draw foods
     for food in foods[:]:
-        # Draw food as yellow square
-        pygame.draw.rect(screen, YELLOW, (*food["pos"], CELL_SIZE, CELL_SIZE))
+        # Draw food with color based on weight (optional)
+        color = YELLOW
+        if food["weight"] == 2:
+            color = (255, 165, 0)  # orange
+        elif food["weight"] == 3:
+            color = RED
+
+        pygame.draw.rect(screen, color, (*food["pos"], CELL_SIZE, CELL_SIZE))
         food["timer"] -= 1
         if food["timer"] <= 0:
             foods.remove(food)
@@ -230,11 +232,13 @@ while running:
         pygame.draw.rect(screen, GREEN, (*part, CELL_SIZE, CELL_SIZE))
 
     # Show score
-    score_text = font.render("Score: " + str(score), True, WHITE)
+    score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(score_text, (10, 10))
 
     pygame.display.flip()
-    clock.tick(FPS)
+
+pygame.quit()
+sys.exit()
 
 # paint
 
